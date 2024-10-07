@@ -1,91 +1,88 @@
 ////////////////////////////////////////////////////////////////////////
-//** ENGR-2350 Template Project 
-//** NAME: XXXX
-//** RIN: XXXX
+//** ENGR-2350 Lab 2
+//** NAME: Jourdon Willett
+//** RIN: 662058549
 //** This is the base project for several activities and labs throughout
 //** the course.  The outline provided below isn't necessarily *required*
 //** by a C program; however, this format is required within ENGR-2350
 //** to ease debugging/grading by the staff.
 ////////////////////////////////////////////////////////////////////////
 
+// We'll always add this include statement. This basically takes the
+// code contained within the "engr_2350_msp432.h" file and adds it here.
 #include "engr2350_msp432.h"
-#include "lab1lib.h"
 
+// Add function prototypes here as needed.
+//void TimerInit();
 void GPIOInit();
-void TestIO();
-void ControlSystem();
+void GetInputs();
+void BMPLogic();
+// Add global variables here as needed.
 
-uint8_t LEDFL = 0; // Two variables to store the state of
-uint8_t LEDFR = 0; // the front left/right LEDs (on-car)
+Timer_A_UpModeConfig timerconfig;
+
+uint8_t PB1;
 uint8_t BMP0;
 uint8_t BMP1;
 uint8_t BMP2;
 uint8_t BMP3;
 uint8_t BMP4;
 uint8_t BMP5;
-int main(void) {    /** Main Function ****/
 
-    SysInit(); // Basic car initialization
-    init_Sequence(); // Initializes the Lab1Lib Driver
+int main( void ) {    /** Main Function ****/
+  
+    // Add local variables here as needed.
+
+    // We always call the SysInit function first to set up the 
+    // microcontroller for how we are going to use it.
+    SysInit();
+
+    // Place initialization code (or run-once) code here
     GPIOInit();
+//    TimerInit();
+    while( 1 ) {  
+        // Place code that runs continuously in here
+        GetInputs();
+        BMPLogic();
+    }   
+}    /** End Main Function ****/   
 
-    printf("\r\n\n"
-           "===========\r\n"
-           "Lab 1 Start\r\n"
-           "===========\r\n");
+// Add function declarations here as needed
+//void TimerInit() {
+//    timer.clocksource = TIMER_A_CLOCKSOURCE_SMCLK;
+//}
 
-    while(1) {
-        TestIO(); // Used in Part A to test the IO
-        //ControlSystem(); // Used in Part B to implement the desired functionality
-    }
-}    /** End Main Function ****/
-
-void GPIOInit() {
+void GPIOInit(){
+    P2DIR |= 0x06;
+    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN1 | GPIO_PIN0 | GPIO_PIN2);
     P4DIR &= 0xFD;
-    GPIO_setAsInputPin( GPIO_PORT_P4, GPIO_PIN0 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7);
-    P6DIR |= 0x03;
-    GPIO_setAsOutputPin( GPIO_PORT_P6, GPIO_PIN0 | GPIO_PIN1 );
-    P8DIR |= 0x21;
-    GPIO_setAsOutputPin( GPIO_PORT_P8, GPIO_PIN0 | GPIO_PIN5 );
-    P3DIR |= 0b11000000;
-    GPIO_setAsOutputPin( GPIO_PORT_P3, GPIO_PIN6 | GPIO_PIN7 );
+    GPIO_setAsInputPinWithPullUpResistor( GPIO_PORT_P4, GPIO_PIN0 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7);
 
 }
+void GetInputs(){
+    BMP0 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN0);
+    BMP1 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN2);
+    BMP2 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN3);
+    BMP3 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN5);
+    BMP4 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN6);
+    BMP5 = GPIO_getInputPinValue(GPIO_PORT_P4,GPIO_PIN7);
+}
 
-void TestIO() {
-    // Add printf statement(s) for testing inputs
-
-    // Example code for testing outputs
-    while(1){
-        uint8_t cmd = getchar();
-        if(cmd == 'a'){
-            P8OUT |= 0x01;
-        printf("LEDFL is on.\r\n");
-        }else if(cmd == 'z'){
-            P8OUT &= ~0x01;
-            printf("LEDFL is off. \r\n");
-        }else if(cmd == 's'){
-            P8OUT |= 0x20;
-            printf("LEDFR is on.\r\n");
-        }else if(cmd == 'x'){
-            P8OUT &= ~0x20;
-            printf("LEDFR is off.\r\n");
-        }else if(cmd == 'q'){
-            P6OUT |= 0x01;
-            P6OUT &= ~0x02;
-            printf("BiLED is red.\r\n");
-        }else if(cmd == 'e'){
-            P6OUT |= 0x02;
-            P6OUT &= ~0x01;
-            printf("BiLED is green.\r\n");
-        }else if(cmd == 'w'){
-              P6OUT &= ~0x03;
-              printf("BiLED is off.\r\n");
-        }
-
+void BMPLogic(){
+    if (BMP0 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0);
     }
-}
+    else if(BMP1 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1);
+    }else if(BMP2 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2);
+    }else if(BMP3 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0 | GPIO_PIN1);
+    }else if(BMP4 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0 | GPIO_PIN2);
+    }else if(BMP5 != 1){
+        GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1 | GPIO_PIN2);
+    }
 
-void ControlSystem() {
-
 }
+// Add interrupt functions last so they are easy to find
